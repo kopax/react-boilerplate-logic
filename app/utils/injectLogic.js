@@ -11,7 +11,7 @@ import getInjectors from './logicInjectors';
  * @param {function} logic A root logic that will be injected
  *
  */
-export default ({ key, logic }) => (WrappedComponent) => {
+export default ({ key, logic, mode }) => (WrappedComponent) => {
   class InjectLogic extends React.Component {
     static WrappedComponent = WrappedComponent;
     static contextTypes = {
@@ -22,7 +22,7 @@ export default ({ key, logic }) => (WrappedComponent) => {
     componentWillMount() {
       const { injectLogic } = this.injectors;
 
-      injectLogic(key, { logic }, this.props);
+      injectLogic(key, { logic, mode }, this.props);
     }
 
     componentWillUnmount() {
