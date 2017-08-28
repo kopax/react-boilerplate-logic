@@ -7,12 +7,14 @@ import { fromJS } from 'immutable';
 import { routerMiddleware } from 'react-router-redux';
 import { createLogicMiddleware } from 'redux-logic';
 import createSagaMiddleware from 'redux-saga';
+import request from 'utils/request';
 import createReducer from './reducers';
 
 const sagaMiddleware = createSagaMiddleware();
 
 export default function configureStore(initialState = {}, history) {
   const injectedHelpers = {
+    request,
     forwardTo(location) {
       history.push(location);
     },

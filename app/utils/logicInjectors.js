@@ -5,13 +5,6 @@ import invariant from 'invariant';
 import conformsTo from 'lodash/conformsTo';
 
 import checkStore from './checkStore';
-import {
-  DAEMON,
-  ONCE_TILL_UNMOUNT,
-  RESTART_ON_REMOUNT,
-} from './constants';
-
-const allowedModes = [RESTART_ON_REMOUNT, DAEMON, ONCE_TILL_UNMOUNT];
 
 const checkKey = (key) => invariant(
   isString(key) && !isEmpty(key),
@@ -21,7 +14,6 @@ const checkKey = (key) => invariant(
 const checkDescriptor = (descriptor) => {
   const shape = {
     logic: isArray,
-    mode: (mode) => isString(mode) && allowedModes.includes(mode),
   };
   invariant(
     conformsTo(descriptor, shape),
@@ -30,49 +22,17 @@ const checkDescriptor = (descriptor) => {
 };
 
 export function injectLogicFactory(store, isValid) {
-  return function injectLogic(key, descriptor = {}, args) {
-    if (!isValid) checkStore(store);
-    console.log('hey');
-
-    const newDescriptor = { ...descriptor, mode: descriptor.mode || RESTART_ON_REMOUNT };
-    const { logic, mode } = newDescriptor;
-
-    console.log(newDescriptor);
-    checkKey(key);
-    checkDescriptor(newDescriptor);
-    let hasLogic = Reflect.has(store.injectedLogics, key);
-
-    if (process.env.NODE_ENV !== 'production') {
-      const oldDescriptor = store.injectedLogics[key];
-      // enable hot reloading of daemon and once-till-unmount sagas
-      if (hasLogic && oldDescriptor.logic !== logic) {
-        oldDescriptor.task.cancel();
-        hasLogic = false;
-      }
-    }
-
-    if (!hasLogic || (hasLogic && mode !== DAEMON && mode !== ONCE_TILL_UNMOUNT)) {
-      store.injectedLogics[key] = { ...newDescriptor, task: store.runSaga(logic, args) }; // eslint-disable-line no-param-reassign
-    }
-  };
-}
-
-export function ejectLogicFactory(store, isValid) {
-  return function ejectLogic(key) {
+  return function injectLogic(key, descriptor = {}) {
     if (!isValid) checkStore(store);
 
-    checkKey(key);
+    const { logic } = descriptor;
 
-    if (Reflect.has(store.injectedLogics, key)) {
-      const descriptor = store.injectedLogics[key];
-      if (descriptor.mode !== DAEMON) {
-        descriptor.task.cancel();
-        // Clean up in production; in development we need `descriptor.saga` for hot reloading
-        if (process.env.NODE_ENV === 'production') {
-          // Need some value to be able to detect `ONCE_TILL_UNMOUNT` sagas in `injectLogic`
-          store.injectedLogics[key] = 'done'; // eslint-disable-line no-param-reassign
-        }
-      }
+    checkKey(key);
+    checkDescriptor(descriptor);
+    const hasLogic = Reflect.has(store.injectedLogics, key);
+    if (!hasLogic) {
+      console.log(store.logicMiddleware.mergeNewLogic(logic));
+      store.injectedLogics[key] = { ...descriptor, task: store.logicMiddleware.mergeNewLogic(logic) }; // eslint-disable-line no-param-reassign
     }
   };
 }
@@ -82,6 +42,5 @@ export default function getInjectors(store) {
 
   return {
     injectLogic: injectLogicFactory(store, true),
-    ejectLogic: ejectLogicFactory(store, true),
   };
 }

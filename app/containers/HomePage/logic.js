@@ -26,10 +26,10 @@ export const getReposLogic = createLogic({
   // on error, it dispatches the using the action creator set in
   // processOptions.failType above `repoLoadingError(err)`
   // requestUtil was injected in store.js createLogicMiddleware
-  process({ getState, requestUtil /* , action */ }) {
+  process({ getState, request /* , action */ }) {
     const username = makeSelectUsername()(getState());
     const requestURL = `https://api.github.com/users/${username}/repos?type=all&sort=updated`;
-    return requestUtil(requestURL) // return a promise resolving to action
+    return request(requestURL) // return a promise resolving to action
       .then((repos) => reposLoaded(repos, username)); // resolve w/action
   },
 });
