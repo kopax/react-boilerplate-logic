@@ -9,7 +9,6 @@ import getInjectors, {
   injectLogicFactory,
 } from '../logicInjectors';
 
-
 const testLogic = createLogic({
   type: 'TRIGGER_TEST',
   process() { // return action to dispatch
