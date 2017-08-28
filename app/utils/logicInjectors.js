@@ -31,7 +31,6 @@ export function injectLogicFactory(store, isValid) {
     checkDescriptor(descriptor);
     const hasLogic = Reflect.has(store.injectedLogics, key);
     if (!hasLogic) {
-      console.log(store.logicMiddleware.mergeNewLogic(logic));
       store.injectedLogics[key] = { ...descriptor, task: store.logicMiddleware.mergeNewLogic(logic) }; // eslint-disable-line no-param-reassign
     }
   };
